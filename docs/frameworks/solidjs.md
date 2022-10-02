@@ -4,23 +4,41 @@ title: SolidJS | Frameworks
 
 # SolidJS
 
-You can use the built-in `Vite` virtual module `virtual:pwa-register/solid` for `SolidJS` which will return
-`createSignal` stateful values (`createSignal<boolean>`) for `offlineReady` and `needRefresh`.
+You can use the built-in `Vite` virtual module `virtual:pwa-register/solid` for `SolidJS` which will return `createSignal` stateful values (`createSignal<boolean>`) for `offlineReady` and `needRefresh`.
 
-> You will need to add `workbox-window` as a `dev` dependency to your `Vite` project.
+::: warning
+You will need to add `workbox-window` as a `dev` dependency to your `Vite` project.
+:::
 
 ## Type declarations
 
+::: tip
+<TypeScriptError2307 />
+:::
+
 ```ts
 declare module 'virtual:pwa-register/solid' {
-  // @ts-ignore ignore when solid-js is not installed
-  import { Accessor, Setter } from 'solid-js'
+  // @ts-expect-error ignore when solid-js is not installed
+  import type { Accessor, Setter } from 'solid-js'
 
-  export type RegisterSWOptions = {
+  export interface RegisterSWOptions {
     immediate?: boolean
     onNeedRefresh?: () => void
     onOfflineReady?: () => void
+    /**
+     * Called only if `onRegisteredSW` is not provided.
+     *
+     * @deprecated Use `onRegisteredSW` instead.
+     * @param registration The service worker registration if available.
+     */
     onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void
+    /**
+     * Called once the service worker is registered (requires version `0.12.8+`).
+     *
+     * @param swScriptUrl The service worker script url.
+     * @param registration The service worker registration if available.
+     */
+    onRegisteredSW?: (swScriptUrl: string, registration: ServiceWorkerRegistration | undefined) => void
     onRegisterError?: (error: any) => void
   }
 
@@ -36,28 +54,25 @@ declare module 'virtual:pwa-register/solid' {
 
 You can use this `ReloadPrompt.tsx` component:
 
-<details>
-  <summary><strong>ReloadPrompt.tsx</strong> code</summary>
-
+::: details ReloadPrompt.tsx
 ```tsx
-// eslint-disable-next-line no-use-before-define
-import { Component, Show } from "solid-js";
+import type { Component } from 'solid-js'
+import { Show } from 'solid-js'
+import { useRegisterSW } from 'virtual:pwa-register/solid'
 import styles from './ReloadPrompt.module.css'
 
-import { useRegisterSW } from 'virtual:pwa-register/solid'
-
-const ReloadPrompt: Component = () => {  
+const ReloadPrompt: Component = () => {
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-        // eslint-disable-next-line prefer-template
-        console.log('SW Registered: ' + r)
+      // eslint-disable-next-line prefer-template
+      console.log('SW Registered: ' + r)
     },
     onRegisterError(error) {
-        console.log('SW registration error', error)
+      console.log('SW registration error', error)
     },
   })
 
@@ -67,10 +82,10 @@ const ReloadPrompt: Component = () => {
   }
 
   return (
-    <div class={styles.Container}>
+    <div className={styles.Container}>
       <Show when={offlineReady() || needRefresh()}>
-        <div class={styles.Toast}>
-          <div class={styles.Message}>
+        <div className={styles.Toast}>
+          <div className={styles.Message}>
             <Show
               fallback={<span>New content available, click on reload button to update.</span>}
               when={offlineReady()}
@@ -79,9 +94,9 @@ const ReloadPrompt: Component = () => {
             </Show>
           </div>
           <Show when={needRefresh()}>
-            <button class={styles.ToastButton} onClick={() => updateServiceWorker(true)}>Reload</button>
+            <button className={styles.ToastButton} onClick={() => updateServiceWorker(true)}>Reload</button>
           </Show>
-          <button class={styles.ToastButton} onClick={() => close()}>Close</button>
+          <button className={styles.ToastButton} onClick={() => close()}>Close</button>
         </div>
       </Show>
     </div>
@@ -90,13 +105,11 @@ const ReloadPrompt: Component = () => {
 
 export default ReloadPrompt
 ```
-</details>
+:::
 
 and its corresponding `ReloadPrompt.module.css` styles module:
 
-<details>
-  <summary><strong>ReloadPrompt.module.css</strong> code</summary>
-
+::: details ReloadPrompt.module.css
 ```css
 .Container {
   padding: 0;
@@ -128,15 +141,14 @@ and its corresponding `ReloadPrompt.module.css` styles module:
   padding: 3px 10px;
 }
 ```
-</details>
+:::
 
 ## Periodic SW Updates
 
-As explained in [Periodic Service Worker Updates](/guide/periodic-sw-updates.html), you can use this code to configure this
-behavior on your application with the virtual module `virtual:pwa-register/solid`:
+As explained in [Periodic Service Worker Updates](/guide/periodic-sw-updates), you can use this code to configure this behavior on your application with the virtual module `virtual:pwa-register/solid`:
 
 ```ts
-import { useRegisterSW } from 'virtual:pwa-register/solid';
+import { useRegisterSW } from 'virtual:pwa-register/solid'
 
 const intervalMS = 60 * 60 * 1000
 

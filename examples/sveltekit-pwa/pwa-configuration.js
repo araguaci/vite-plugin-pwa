@@ -32,14 +32,23 @@ const pwaConfiguration = {
 			},
 		]
 	},
+	devOptions: {
+		enabled: process.env.SW_DEV === 'true',
+		/* when using generateSW the PWA plugin will switch to classic */
+		type: 'module',
+		navigateFallback: '/',
+		webManifestUrl: '/_app/manifest.webmanifest'
+	},
 }
 
 const claims = process.env.CLAIMS === 'true'
 const reload = process.env.RELOAD_SW === 'true'
 const sw = process.env.SW === 'true'
+const selfDestroying = process.env.SW_DESTROY === 'true'
 const replaceOptions = {
 	__DATE__: new Date().toISOString(),
 	__RELOAD_SW__: reload ? 'true' : 'false',
+	__SW_DEV__: process.env.SW_DEV === 'true' ? 'true' : 'false',
 }
 
 const workboxOrInjectManifestEntry = {
@@ -60,7 +69,7 @@ const workboxOrInjectManifestEntry = {
 				if (url.startsWith('/'))
 					url = url.slice(1)
 
-				e.url = url === 'index.html' ? '/' : `/${url.substring(0, url.lastIndexOf('/'))}`
+				e.url = url === 'index.html' ? '/' : `/${url.substring(0, url.lastIndexOf('.'))}`
 				console.log(`${url} => ${e.url}`)
 			}
 
@@ -85,5 +94,8 @@ if (sw) {
 
 if (claims)
 	pwaConfiguration.registerType = 'autoUpdate'
+
+if (selfDestroying)
+	pwaConfiguration.selfDestroying = selfDestroying
 
 export { pwaConfiguration, replaceOptions }

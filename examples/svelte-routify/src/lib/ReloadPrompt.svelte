@@ -1,6 +1,11 @@
 <script lang="ts">
   import { useRegisterSW } from 'virtual:pwa-register/svelte'
 
+  import { pwaInfo } from 'virtual:pwa-info'
+
+  // eslint-disable-next-line no-console
+  console.log(pwaInfo)
+
   // replaced dynamically
   const buildDate = '__DATE__'
   // replaced dyanmicaly
@@ -11,7 +16,9 @@
       needRefresh,
       updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
+    onRegisteredSW(swUrl, r) {
+        // eslint-disable-next-line no-console
+        console.log(`Service Worker at: ${swUrl}`)
         if (reloadSW === 'true') {
             r && setInterval(() => {
                 console.log('Checking for sw update')

@@ -1,7 +1,12 @@
-/* eslint-disable react/react-in-jsx-scope,react/no-unknown-property */
-import { Component, Show } from 'solid-js'
+/* eslint-disable react/no-unknown-property */
+import type { Component } from 'solid-js'
+import { Show } from 'solid-js'
 import { useRegisterSW } from 'virtual:pwa-register/solid'
+import { pwaInfo } from 'virtual:pwa-info'
 import styles from './ReloadPrompt.module.css'
+
+// eslint-disable-next-line no-console
+console.log(pwaInfo)
 
 const ReloadPrompt: Component = () => {
   // replaced dynamically
@@ -12,8 +17,10 @@ const ReloadPrompt: Component = () => {
     updateServiceWorker,
   } = useRegisterSW({
     immediate: true,
-    onRegistered(r) {
-      // @ts-ignore
+    onRegisteredSW(swUrl, r) {
+      // eslint-disable-next-line no-console
+      console.log(`Service Worker at: ${swUrl}`)
+      // @ts-expect-error just ignore
       if (reloadSW === 'true') {
         r && setInterval(() => {
           // eslint-disable-next-line no-console

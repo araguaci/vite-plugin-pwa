@@ -1,18 +1,20 @@
-import 'vue-global-api'
+import { h } from 'vue'
+import Theme from 'vitepress/theme'
 
-import Layout from './Layout.vue'
-import NotFound from './NotFound.vue'
-
+import './styles/main.css'
 import './styles/vars.css'
-import './styles/layout.css'
-import './styles/code.css'
-import './styles/sidebar-links.css'
 
-import 'virtual:windi.css'
+import 'uno.css'
 
-const theme = {
-    Layout,
-    NotFound,
+import HomePage from './components/HomePage.vue'
+import ReloadPrompt from './components/ReloadPrompt.vue'
+
+export default {
+  ...Theme,
+  Layout() {
+    return h(Theme.Layout, null, {
+      'home-features-after': () => h(HomePage),
+      'layout-bottom': () => h(ReloadPrompt),
+    })
+  },
 }
-
-export default theme

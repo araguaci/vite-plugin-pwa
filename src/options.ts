@@ -1,10 +1,11 @@
 import fs from 'fs'
-import { resolve, extname } from 'path'
-import { ResolvedConfig } from 'vite'
-import { GenerateSWOptions, InjectManifestOptions } from 'workbox-build'
-import { ManifestOptions, VitePWAOptions, ResolvedVitePWAOptions } from './types'
+import { extname, resolve } from 'path'
+import type { ResolvedConfig } from 'vite'
+import type { GenerateSWOptions, InjectManifestOptions } from 'workbox-build'
+import type { ManifestOptions, ResolvedVitePWAOptions, VitePWAOptions } from './types'
 import { configureStaticAssets } from './assets'
 import { resolveBathPath } from './utils'
+import { defaultInjectManifestVitePlugins } from './constants'
 
 function resolveSwPaths(injectManifest: boolean, root: string, srcDir: string, outDir: string, filename: string): {
   swSrc: string
@@ -45,6 +46,7 @@ export async function resolveOptions(options: Partial<VitePWAOptions>, viteConfi
     injectRegister = 'auto',
     registerType = 'prompt',
     filename = 'sw.js',
+    manifestFilename = 'manifest.webmanifest',
     strategies = 'generateSW',
     minify = true,
     base = viteConfig.base,
@@ -52,6 +54,9 @@ export async function resolveOptions(options: Partial<VitePWAOptions>, viteConfi
     includeManifestIcons = true,
     useCredentials = false,
     disable = false,
+    devOptions = { enabled: false, type: 'classic' },
+    selfDestroying = false,
+    integration = {},
   } = options
 
   const basePath = resolveBathPath(base)
@@ -98,9 +103,14 @@ export async function resolveOptions(options: Partial<VitePWAOptions>, viteConfi
   const manifest = typeof options.manifest === 'boolean' && !options.manifest
     ? false
     : Object.assign({}, defaultManifest, options.manifest || {})
-  const injectManifest = Object.assign({}, defaultInjectManifest, options.injectManifest || {})
+  const {
+    vitePlugins = defaultInjectManifestVitePlugins,
+    rollupFormat = 'es',
+    ...userInjectManifest
+  } = options.injectManifest || {}
+  const injectManifest = Object.assign({}, defaultInjectManifest, userInjectManifest)
 
-  if ((injectRegister === 'auto' || registerType == null) && registerType === 'autoUpdate') {
+  if ((injectRegister === 'auto' || injectRegister == null) && registerType === 'autoUpdate') {
     workbox.skipWaiting = true
     workbox.clientsClaim = true
   }
@@ -109,6 +119,16 @@ export async function resolveOptions(options: Partial<VitePWAOptions>, viteConfi
   if (strategies === 'generateSW' && workbox.sourcemap === undefined) {
     const sourcemap = viteConfig.build?.sourcemap
     workbox.sourcemap = sourcemap === true || sourcemap === 'inline' || sourcemap === 'hidden'
+  }
+
+  if (devOptions.enabled && viteConfig.command === 'serve') {
+    // `generateSW` will work only with `type: 'classic'`
+    if (strategies === 'generateSW')
+      devOptions.type = 'classic'
+  }
+  else {
+    devOptions.enabled = false
+    devOptions.type = 'classic'
   }
 
   const resolvedVitePWAOptions: ResolvedVitePWAOptions = {
@@ -121,6 +141,7 @@ export async function resolveOptions(options: Partial<VitePWAOptions>, viteConfi
     injectRegister,
     registerType,
     filename: useFilename || filename,
+    manifestFilename,
     strategies,
     workbox,
     manifest,
@@ -131,6 +152,11 @@ export async function resolveOptions(options: Partial<VitePWAOptions>, viteConfi
     includeAssets,
     includeManifestIcons,
     disable,
+    integration,
+    devOptions,
+    rollupFormat,
+    vitePlugins,
+    selfDestroying,
   }
 
   await configureStaticAssets(resolvedVitePWAOptions, viteConfig)

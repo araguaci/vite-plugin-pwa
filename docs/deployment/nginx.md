@@ -29,7 +29,7 @@ types {
 You can validate the setting by checking the HTTP headers once the app is deployed
 
 ```shell script
-curl -s -I -X GET https://yourserver/manifest.webmanifest | grep content-type
+curl -s -I -X GET https://yourserver/manifest.webmanifest | grep content-type -i
 ```
 
 and check that the result is `content-type: application/manifest+json`.
@@ -59,7 +59,7 @@ Double check that **you do not** have caching features enabled, especially `immu
 
 NGINX will add `E-Tag`-headers itself, so there is not much to in that regard.
 
-As a general rule, everything in `/assets/` can have a very long cache time, as everything in there should contain a hash in the filename.
+As a general rule, files in `/assets/` can have a very long cache time, as everything in there should contain a hash in the filename.
 
 An example configuration inside your `server` block could be:
 
@@ -90,4 +90,6 @@ location / {
 
 Be aware that this is a very simplistic approach and you must test every change, as the NGINX match precedences for locations are not very intuitive and error prone if you do not know the [exact rules](https://docs.nginx.com/nginx/admin-guide/web-server/web-server/#location_priority).
 
+::: danger
 **Always re-test and re-assure** that the caching for mission critical files is **as low** as possible if not hashed files or you might invalidate clients for a long time.
+:::

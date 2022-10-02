@@ -1,4 +1,7 @@
-import type { UserConfig } from 'vitepress'
+import { defineConfig } from 'vitepress'
+import { version } from '../../package.json'
+import { pwa } from '../scripts/pwa'
+import { buildEnd } from '../scripts/build'
 
 const Guide = [
   {
@@ -6,32 +9,48 @@ const Guide = [
     link: '/guide/',
   },
   {
-    text: 'Generate Service Worker',
-    link: '/guide/generate'
+    text: 'Register Service Worker',
+    link: '/guide/register-service-worker',
   },
   {
-    text: 'Prompt for update',
-    link: '/guide/prompt-for-update'
+    text: 'Service Worker Precache',
+    link: '/guide/service-worker-precache',
+  },
+  {
+    text: 'PWA Minimal Requirements',
+    link: '/guide/pwa-minimal-requirements',
+  },
+  {
+    text: 'Service Worker Strategies And Behaviors',
+    link: '/guide/service-worker-strategies-and-behaviors',
   },
   {
     text: 'Automatic reload',
-    link: '/guide/auto-update'
+    link: '/guide/auto-update',
+  },
+  {
+    text: 'Prompt for update',
+    link: '/guide/prompt-for-update',
   },
   {
     text: 'Advanced (injectManifest)',
-    link: '/guide/inject-manifest'
+    link: '/guide/inject-manifest',
   },
   {
     text: 'Static assets handling',
-    link: '/guide/static-assets'
+    link: '/guide/static-assets',
   },
   {
     text: 'Periodic SW updates',
-    link: '/guide/periodic-sw-updates'
+    link: '/guide/periodic-sw-updates',
   },
   {
-    text: 'Testing Service Worker',
-    link: '/guide/testing',
+    text: 'Development',
+    link: '/guide/development',
+  },
+  {
+    text: 'Unregister Service Worker',
+    link: '/guide/unregister-service-worker',
   },
   {
     text: 'FAQ',
@@ -99,6 +118,14 @@ const Frameworks = [
     text: 'VitePress',
     link: '/frameworks/vitepress',
   },
+  {
+    text: 'îles',
+    link: '/frameworks/iles',
+  },
+  {
+    text: 'Astro (WIP)',
+    link: '/frameworks/astro',
+  },
 ]
 
 const Examples = [
@@ -134,6 +161,14 @@ const Examples = [
     text: 'VitePress',
     link: '/examples/vitepress',
   },
+  {
+    text: 'îles',
+    link: '/examples/iles',
+  },
+  {
+    text: 'Astro (WIP)',
+    link: '/examples/astro',
+  },
 ]
 
 const Workbox = [
@@ -142,8 +177,8 @@ const Workbox = [
     link: '/workbox/',
   },
   {
-    text: 'generateWS',
-    link: '/workbox/generate-ws',
+    text: 'generateSW',
+    link: '/workbox/generate-sw',
   },
   {
     text: 'injectManifest',
@@ -151,109 +186,154 @@ const Workbox = [
   },
 ]
 
-const slidebars = [
-  {
-    text: 'Guide',
-    children: Guide.map((e) => {
-      (e as any).useLinkText = `${e.text} | Guide`
-      return e
-    }),
-  },
-  {
-    text: 'Frameworks',
-    children: Frameworks.map((e) => {
-      (e as any).useLinkText = `${e.text} | Frameworks`
-      return e
-    }),
-  },
-  {
-    text: 'Examples',
-    children: Examples.map((e) => {
-      (e as any).useLinkText = `${e.text} | Examples`
-      return e
-    }),
-  },
-  {
-    text: 'Deployment',
-    children: Deployment.map((e) => {
-      (e as any).useLinkText = `${e.text} | Deployment`
-      return e
-    }),
-  },
-  {
-    text: 'Workbox',
-    children: Workbox.map((e) => {
-      (e as any).useLinkText = `${e.text} | Workbox`
-      return e
-    }),
-  },
-]
+function prepareSidebar(idx: number) {
+  return [
+    {
+      text: 'Guide',
+      collapsible: true,
+      collapsed: true,
+      items: Guide,
+    },
+    {
+      text: 'Frameworks',
+      collapsible: true,
+      collapsed: true,
+      items: Frameworks,
+    },
+    {
+      text: 'Examples',
+      collapsible: true,
+      collapsed: true,
+      items: Examples,
+    },
+    {
+      text: 'Deploy',
+      collapsible: true,
+      collapsed: true,
+      items: Deployment,
+    },
+    {
+      text: 'Workbox',
+      collapsible: true,
+      collapsed: true,
+      items: Workbox,
+    },
+  ].map((entry, i) => {
+    if (idx === i)
+      entry.collapsed = false
 
-const config: UserConfig = {
+    return entry
+  })
+}
+
+const ogUrl = 'https://vite-plugin-pwa.netlify.app/'
+const ogImage = 'https://vite-plugin-pwa.netlify.app/og-image.png'
+
+export default defineConfig({
+  lang: 'en-US',
   title: 'Vite Plugin PWA',
   description: 'Zero-config PWA Framework-agnostic Plugin for Vite',
-  lang: 'en-US',
   head: [
     ['meta', { name: 'theme-color', content: '#ffffff' }],
     ['link', { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' }],
     ['link', { rel: 'alternate icon', href: '/favicon.ico', type: 'image/png', sizes: '16x16' }],
     ['link', { rel: 'mask-icon', href: '/safari-pinned-tab.svg', color: '#ffffff' }],
     ['meta', { name: 'author', content: 'Anthony Fu' }],
-    ['meta', { name: 'keywords', content: 'react, pwa, vue, vitepress, preact, svelte, sveltekit, workbox, solidjs, vite, vite-plugin' }],
+    ['meta', {
+      name: 'keywords',
+      content: 'PWA, React, Vue, VitePress, Preact, Svelte, SvelteKit, workbox, SolidJS, Vite, vite-plugin, îles, Astro',
+    }],
+    ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Vite Plugin PWA' }],
+    ['meta', { property: 'og:image', content: ogImage }],
     ['meta', { property: 'og:description', content: 'Zero-config PWA Framework-agnostic Plugin for Vite' }],
+    ['meta', { property: 'og:url', content: ogUrl }],
+    ['meta', { name: 'twitter:description', content: 'Zero-config PWA Framework-agnostic Plugin for Vite' }],
+    ['meta', { name: 'twitter:title', content: 'Vite Plugin PWA' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:creator', content: '@antfu7' }],
-    ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: "180x180" }],
+    ['meta', { name: 'twitter:image', content: ogImage }],
+    ['meta', { name: 'twitter:site', content: '@antfu7' }],
+    ['meta', { name: 'twitter:url', content: ogUrl }],
+    ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
   ],
+  lastUpdated: true,
+  markdown: {
+    theme: {
+      light: 'vitesse-light',
+      dark: 'vitesse-dark',
+    },
+  },
   themeConfig: {
-    logo: '/favicon.svg',
-    repo: 'antfu/vite-plugin-pwa',
-    docsDir: 'docs',
-    editLinks: true,
-    editLinkText: 'Edit this page',
-    lastUpdated: 'Last Updated',
-    /*
-      algolia: {
-        apiKey: 'todo@antfu: replace this',
-        indexName: 'vite-plugin-pwa',
-        searchParameters: {
-          // for translations maintainers: change the filter to your locale code (subdomain name)
-          facetFilters: ['language:en']
-        }
-      },
-    */
+    // logo: '/favicon.svg',
+    editLink: {
+      pattern: 'https://github.com/antfu/vite-plugin-pwa/edit/main/docs/:path',
+      text: 'Suggest changes to this page',
+    },
+    algolia: {
+      appId: 'TTO9T0AE3F',
+      apiKey: '71bd3d3c7274205843267bb1ccb6b1a8',
+      indexName: 'vite-plugin-pwa',
+    },
+    socialLinks: [
+      { icon: 'discord', link: 'https://chat.antfu.me' },
+      { icon: 'github', link: 'https://github.com/antfu/vite-plugin-pwa' },
+    ],
+    footer: {
+      message: 'Released under the MIT License.',
+      copyright: 'Copyright © 2021-PRESENT Anthony Fu',
+    },
     nav: [
       {
         text: 'Guide',
-        items: Guide,
+        items: [
+          {
+            text: 'Getting Started',
+            link: '/guide/',
+          },
+          {
+            text: 'Frameworks',
+            link: '/frameworks/',
+          },
+          {
+            text: 'Examples',
+            link: '/examples/',
+          },
+        ],
       },
       {
-        text: 'Frameworks',
-        items: Frameworks,
-      },
-      {
-        text: 'Examples',
-        items: Examples,
-      },
-      {
-        text: 'Deployment',
-        items: Deployment,
+        text: 'Deploy',
+        link: '/deployment/',
       },
       {
         text: 'Workbox',
-        items: Workbox,
+        link: '/workbox/',
+      },
+      {
+        text: `v${version}`,
+        items: [
+          {
+            text: 'Release Notes',
+            link: 'https://github.com/antfu/vite-plugin-pwa/releases',
+          },
+          {
+            text: 'Contributing',
+            link: 'https://github.com/antfu/vite-plugin-pwa/blob/main/CONTRIBUTING.md',
+          },
+        ],
       },
     ],
     sidebar: {
-      '/guide/': slidebars,
-      '/frameworks/': slidebars,
-      '/examples/': slidebars,
-      '/deployment/': slidebars,
-      '/workbox/': slidebars,
-      '/': slidebars,
+      '/guide/': prepareSidebar(0),
+      '/frameworks/': prepareSidebar(1),
+      '/examples/': prepareSidebar(2),
+      '/deployment/': prepareSidebar(3),
+      '/workbox/': prepareSidebar(4),
     },
   },
-}
-
-export default config
+  vite: {
+    plugins: [
+      pwa(),
+    ],
+  },
+  buildEnd,
+})

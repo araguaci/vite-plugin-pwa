@@ -4,4 +4,6 @@ title: Vercel | Deployment
 
 # Vercel
 
-> Work in progress
+::: info WIP
+Will coming soon.
+:::

@@ -1,5 +1,5 @@
 import { createSignal } from 'solid-js'
-import { RegisterSWOptions } from '../type'
+import type { RegisterSWOptions } from '../type'
 import { registerSW } from './register'
 
 export type { RegisterSWOptions }
@@ -10,6 +10,7 @@ export function useRegisterSW(options: RegisterSWOptions = {}) {
     onNeedRefresh,
     onOfflineReady,
     onRegistered,
+    onRegisteredSW,
     onRegisterError,
   } = options
 
@@ -27,6 +28,7 @@ export function useRegisterSW(options: RegisterSWOptions = {}) {
       onNeedRefresh?.()
     },
     onRegistered,
+    onRegisteredSW,
     onRegisterError,
   })
 

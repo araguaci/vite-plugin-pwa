@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 
@@ -6,9 +5,14 @@ const {
   offlineReady,
   needRefresh,
   updateServiceWorker,
-} = useRegisterSW()
+} = useRegisterSW({
+  onRegisteredSW(swUrl) {
+    // eslint-disable-next-line no-console
+    console.log(`Service Worker at: ${swUrl}`)
+  },
+})
 
-const close = async() => {
+const close = async () => {
   offlineReady.value = false
   needRefresh.value = false
 }

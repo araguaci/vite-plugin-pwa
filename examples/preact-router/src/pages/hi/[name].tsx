@@ -1,5 +1,4 @@
-// eslint-disable-next-line no-use-before-define
-import { RouteProps } from 'preact-router'
+import type { RouteProps } from 'preact-router'
 
 function Hi(props: RouteProps<{ name: string }>) {
   // replaced dyanmicaly

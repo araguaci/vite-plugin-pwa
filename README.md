@@ -39,8 +39,11 @@ Zero-config PWA Framework-agnostic Plugin for Vite
 - 💬 **Prompt for new content**: built-in support for Vanilla JavaScript, Vue 3, React, Svelte, SolidJS and Preact
 - ⚙️ **Stale-while-revalidate**: automatic reload when new content is available
 - ✨ **Static assets handling**: configure static assets for offline support
+- 🐞 **Development Support**: debug your custom service worker logic as you develop your application
 
 ## 📦 Install
+
+> From v0.13, `vite-plugin-pwa` requires **Vite 3.1 or above**.
 
 ```bash
 npm i vite-plugin-pwa -D 
@@ -53,10 +56,6 @@ pnpm add vite-plugin-pwa -D
 ```
 
 ## 🦄 Usage
-
-> 🎩 From version `0.11.0`, `workbox` has been updated to version `6.2.2` (previous versions were using `6.1.5` 
-version): if you are using advanced configuration like `workbox` or `injectManifest` options, you must review the plugin
-configuration, since this new version of `workbox` has breaking changes!
 
 Add `VitePWA` plugin to `vite.config.js / vite.config.ts` and configure it:
 

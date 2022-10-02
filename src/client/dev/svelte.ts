@@ -1,13 +1,13 @@
 import { writable } from 'svelte/store'
-import { RegisterSWOptions } from '../type'
+import type { RegisterSWOptions } from '../type'
 
 export type { RegisterSWOptions }
 
-export function useRegisterSW(options: RegisterSWOptions = {}) {
+export function useRegisterSW(_options: RegisterSWOptions = {}) {
   const needRefresh = writable(false)
   const offlineReady = writable(false)
 
-  const updateServiceWorker = (reloadPage?: boolean) => {}
+  const updateServiceWorker = (_reloadPage?: boolean) => {}
 
   return {
     needRefresh,

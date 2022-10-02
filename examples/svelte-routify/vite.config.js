@@ -30,11 +30,18 @@ const pwaOptions = {
       },
     ],
   },
+  devOptions: {
+    enabled: process.env.SW_DEV === 'true',
+    /* when using generateSW the PWA plugin will switch to classic */
+    type: 'module',
+    navigateFallback: 'index.html',
+  },
 }
 
 const replaceOptions = { __DATE__: new Date().toISOString() }
 const claims = process.env.CLAIMS === 'true'
 const reload = process.env.RELOAD_SW === 'true'
+const selfDestroying = process.env.SW_DESTROY === 'true'
 
 if (process.env.SW === 'true') {
   pwaOptions.srcDir = 'src'
@@ -51,6 +58,9 @@ if (reload) {
   // @ts-ignore
   replaceOptions.__RELOAD_SW__ = 'true'
 }
+
+if (selfDestroying)
+  pwaOptions.selfDestroying = selfDestroying
 
 export default defineConfig({
   // base: process.env.BASE_URL || 'https://github.com/',

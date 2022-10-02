@@ -4,23 +4,41 @@ title: React | Frameworks
 
 # React
 
-You can use the built-in `Vite` virtual module `virtual:pwa-register/react` for `React` which will return
-`useState` stateful values (`useState<boolean>`) for `offlineReady` and `needRefresh`.
+You can use the built-in `Vite` virtual module `virtual:pwa-register/react` for `React` which will return `useState` stateful values (`useState<boolean>`) for `offlineReady` and `needRefresh`.
 
-> You will need to add `workbox-window` as a `dev` dependency to your `Vite` project.
+::: warning
+You will need to add `workbox-window` as a `dev` dependency to your `Vite` project.
+:::
 
 ## Type declarations
 
+::: tip
+<TypeScriptError2307 />
+:::
+
 ```ts
 declare module 'virtual:pwa-register/react' {
-  // @ts-ignore ignore when react is not installed
-  import { Dispatch, SetStateAction } from 'react'
+  // @ts-expect-error ignore when react is not installed
+  import type { Dispatch, SetStateAction } from 'react'
 
-  export type RegisterSWOptions = {
+  export interface RegisterSWOptions {
     immediate?: boolean
     onNeedRefresh?: () => void
     onOfflineReady?: () => void
+    /**
+     * Called only if `onRegisteredSW` is not provided.
+     *
+     * @deprecated Use `onRegisteredSW` instead.
+     * @param registration The service worker registration if available.
+     */
     onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void
+    /**
+     * Called once the service worker is registered (requires version `0.12.8+`).
+     *
+     * @param swScriptUrl The service worker script url.
+     * @param registration The service worker registration if available.
+     */
+    onRegisteredSW?: (swScriptUrl: string, registration: ServiceWorkerRegistration | undefined) => void
     onRegisterError?: (error: any) => void
   }
 
@@ -36,11 +54,8 @@ declare module 'virtual:pwa-register/react' {
 
 You can use this `ReloadPrompt.tsx` component:
 
-<details>
-  <summary><strong>ReloadPrompt.tsx</strong> code</summary>
-
+:::details ReloadPrompt.tsx
 ```tsx
-// eslint-disable-next-line no-use-before-define
 import React from 'react'
 import './ReloadPrompt.css'
 
@@ -53,11 +68,11 @@ function ReloadPrompt() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-        // eslint-disable-next-line prefer-template
-        console.log('SW Registered: ' + r)
+      // eslint-disable-next-line prefer-template
+      console.log('SW Registered: ' + r)
     },
     onRegisterError(error) {
-        console.log('SW registration error', error)
+      console.log('SW registration error', error)
     },
   })
 
@@ -72,8 +87,8 @@ function ReloadPrompt() {
         && <div className="ReloadPrompt-toast">
             <div className="ReloadPrompt-message">
               { offlineReady
-                    ? <span>App ready to work offline</span>
-                    : <span>New content available, click on reload button to update.</span>
+                ? <span>App ready to work offline</span>
+                : <span>New content available, click on reload button to update.</span>
               }
             </div>
             { needRefresh && <button className="ReloadPrompt-toast-button" onClick={() => updateServiceWorker(true)}>Reload</button> }
@@ -86,13 +101,11 @@ function ReloadPrompt() {
 
 export default ReloadPrompt
 ```
-</details>
+:::
 
 and its corresponding `ReloadPrompt.css` styles file:
 
-<details>
-  <summary><strong>ReloadPrompt.css</strong> code</summary>
-
+:::details ReloadPrompt.css
 ```css
 .ReloadPrompt-container {
     padding: 0;
@@ -124,15 +137,14 @@ and its corresponding `ReloadPrompt.css` styles file:
     padding: 3px 10px;
 }
 ```
-</details>
+:::
 
 ## Periodic SW Updates
 
-As explained in [Periodic Service Worker Updates](/guide/periodic-sw-updates.html), you can use this code to configure this
-behavior on your application with the virtual module `virtual:pwa-register/react`:
+As explained in [Periodic Service Worker Updates](/guide/periodic-sw-updates), you can use this code to configure this behavior on your application with the virtual module `virtual:pwa-register/react`:
 
 ```ts
-import { useRegisterSW } from 'virtual:pwa-register/react';
+import { useRegisterSW } from 'virtual:pwa-register/react'
 
 const intervalMS = 60 * 60 * 1000
 

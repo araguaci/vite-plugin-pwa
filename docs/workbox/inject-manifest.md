@@ -4,22 +4,42 @@ title: injectManifest | Workbox
 
 # injectManifest
 
-You must read [Which Mode to Use](https://developers.google.com/web/tools/workbox/modules/workbox-build#which_mode_to_use) <outbound-link />
-before decide using this strategy on `vite-plugin-pwa` plugin.
+You must read [Which Mode to Use](https://developer.chrome.com/docs/workbox/modules/workbox-build/#which-mode-to-use) before decide using this strategy on `vite-plugin-pwa` plugin.
 
-Before writing your custom service worker, check if `workbox` can generate the code for you using `generateWS` strategy,
-looking for some plugin on `workbox` site on [Runtime Caching Entry](https://developers.google.com/web/tools/workbox/reference-docs/latest/module-workbox-build#.RuntimeCachingEntry) <outbound-link />.
+Before writing your custom service worker, check if `workbox` can generate the code for you using `generateSW` strategy, looking for some plugin on `workbox` site on [Runtime Caching Entry](https://developer.chrome.com/docs/workbox/reference/workbox-build/#type-RuntimeCaching).
 
-You can find the documentation for this method on `workbox` site: [injectManifest](https://developers.google.com/web/tools/workbox/reference-docs/latest/module-workbox-build#.injectManifest) <outbound-link />
+You can find the documentation for this method on `workbox` site: [injectManifest](https://developer.chrome.com/docs/workbox/reference/workbox-build/#method-injectManifest)
+
+
+## Exclude routes
+
+To exclude some routes from being intercepted by the service worker, you just need to add those routes using a `regex` array to the `denylist` option of `NavigationRoute`:
+
+```ts
+import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
+import { NavigationRoute, registerRoute } from 'workbox-routing'
+
+declare let self: ServiceWorkerGlobalScope
+
+// self.__WB_MANIFEST is default injection point
+precacheAndRoute(self.__WB_MANIFEST)
+
+// to allow work offline
+registerRoute(new NavigationRoute(
+  createHandlerBoundToURL('index.html'),
+  { denylist: [/^\/backoffice/] },
+))
+```
+
+::: warning
+You must deal with offline support for excluded routes: if requesting a page included on `denylist` you will get `No internet connection`.
+:::
 
 ## Network First Strategy
 
-You can use the following code to create your custom service worker to be used with network first strategy. We also include
-how to configure [Custom Cache Network Race Strategy](https://jakearchibald.com/2014/offline-cookbook/#cache--network-race) <outbound-link />.
+You can use the following code to create your custom service worker to be used with network first strategy. We also include how to configure [Custom Cache Network Race Strategy](https://jakearchibald.com/2014/offline-cookbook/#cache--network-race).
 
-<details>
-  <summary><strong>VitePWA options</strong> code</summary>
-
+::: details VitePWA options
 ```ts
 VitePWA({
   strategies: 'injectManifest',
@@ -27,34 +47,31 @@ VitePWA({
   filename: 'sw.ts'
 })
 ```
-</details>
+:::
 
-> You also need to add the logic to interact from the client logic: [Advanced (injectManifest)](/guide/inject-manifest.html).
+::: warning
+You also need to add the logic to interact from the client logic: [Advanced (injectManifest)](/guide/inject-manifest).
+:::
 
-Then in your `src/sw.ts` file, remember you will also need to add following `workbox` dependencies as `dev`
-dependencies:
+Then in your `src/sw.ts` file, remember you will also need to add following `workbox` dependencies as `dev` dependencies:
 - `workbox-core`
 - `workbox-routing`
 - `workbox-strategies`
 - `workbox-build`
 
-<details>
-  <summary><strong>src/sw.ts</strong> code</summary>
-
+::: details src/sw.ts
 ```ts
-/* eslint-disable no-console */
-import { clientsClaim, cacheNames } from 'workbox-core'
+import { cacheNames, clientsClaim } from 'workbox-core'
 import { registerRoute, setCatchHandler, setDefaultHandler } from 'workbox-routing'
+import type { StrategyHandler } from 'workbox-strategies'
 import {
   NetworkFirst,
   NetworkOnly,
-  Strategy,
-  StrategyHandler,
+  Strategy
 } from 'workbox-strategies'
-import { ManifestEntry } from 'workbox-build'
+import type { ManifestEntry } from 'workbox-build'
 
 // Give TypeScript the correct global.
-// @ts-ignore
 declare let self: ServiceWorkerGlobalScope
 declare type ExtendableEvent = any
 
@@ -85,7 +102,6 @@ const buildStrategy = (): Strategy => {
           // Reject if both network and cache error or find no response.
           Promise.allSettled([fetchAndCachePutDone, cacheMatchDone]).then((results) => {
             const [fetchAndCachePutResult, cacheMatchResult] = results
-            // @ts-ignore
             if (fetchAndCachePutResult.status === 'rejected' && !cacheMatchResult.value)
               reject(fetchAndCachePutResult.reason)
           })
@@ -108,7 +124,6 @@ const cacheEntries: RequestInfo[] = []
 
 const manifestURLs = manifest.map(
   (entry) => {
-    // @ts-ignore
     const url = new URL(entry.url, self.location)
     cacheEntries.push(new Request(url.href, {
       credentials: credentials as any
@@ -158,7 +173,6 @@ setDefaultHandler(new NetworkOnly())
 
 // fallback to app-shell for document request
 setCatchHandler(({ event }): Promise<Response> => {
-  // @ts-ignore
   switch (event.request.destination) {
     case 'document':
       return caches.match(fallback).then((r) => {
@@ -174,49 +188,10 @@ setCatchHandler(({ event }): Promise<Response> => {
 self.skipWaiting()
 clientsClaim()
 ```
-</details>
+:::
 
 ## Server Push Notifications
 
-You can use this code on your custom service worker (`src/sw.ts`) to enable `Server Push Notifications`:
+You should check the `workbox` documentation: [Introduction to push notifications](https://developers.google.com/web/ilt/pwa/introduction-to-push-notifications). 
 
-> You also need to add the logic to interact from the client logic: [Advanced (injectManifest)](/guide/inject-manifest.html).
-
-<details>
-  <summary><strong>src/sw.ts</strong> code</summary>
-
-```ts
-function getEndpoint() {
-  return self.registration.pushManager.getSubscription()
-  .then(function(subscription) {
-    if (subscription) {
-      return subscription.endpoint
-    }
-
-    throw new Error('User not subscribed')
-  });
-}
-
-// Register event listener for the ‘push’ event.
-self.addEventListener('push', function(event) {
-  // Keep the service worker alive until the notification is created.
-  event.waitUntil(
-    getEndpoint()
-    .then(function(endpoint) {
-      // Retrieve the textual payload from the server using a GET request. We are using the endpoint as an unique ID 
-      // of the user for simplicity.
-      return fetch('./getPayload?endpoint=' + endpoint)
-    })
-    .then(function(response) {
-      return response.text()
-    })
-    .then(function(payload) {
-      // Show a notification with title ‘ServiceWorker Cookbook’ and use the payload as the body.
-      self.registration.showNotification('ServiceWorker Cookbook', {
-        body: payload
-      });
-    })
-  );
-})
-```
-</details>
+You can check this awesome repo [YT Playlist Notifier](https://github.com/jeffposnick/yt-playlist-notifier) using `Server Push Notifications` and some other cool service worker capabilities from the major collaborator of [Workbox](https://developers.google.com/web/tools/workbox).

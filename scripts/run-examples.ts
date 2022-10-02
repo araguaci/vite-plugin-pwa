@@ -1,30 +1,30 @@
 import { execSync } from 'child_process'
 import prompts from 'prompts'
 import {
-  yellow,
-  green,
-  cyan,
   blue,
+  cyan,
+  green,
   magenta,
   red,
   reset,
+  yellow,
 } from 'kolorist'
 
 type Color = (str: string | number) => string
 
-type Behavior = {
+interface Behavior {
   name: string
   display: string
   color: Color
 }
 
-type Strategy = {
+interface Strategy {
   name: string
   display: string
   color: Color
 }
 
-type Framework = {
+interface Framework {
   name: string
   color: Color
   dir: string
@@ -89,22 +89,23 @@ const FRAMEWORKS: Framework[] = [
   },
 ]
 
-type PromptResult = {
+interface PromptResult {
   framework: Framework
   strategy: Strategy
   behavior: Behavior
   reloadSW: boolean
+  selfDestroying: boolean
 }
 
 async function init() {
   try {
-    const { framework, strategy, behavior, reloadSW }: PromptResult = await prompts([
+    const { framework, strategy, behavior, reloadSW, selfDestroying }: PromptResult = await prompts([
       {
         type: 'select',
         name: 'framework',
         message: reset('Select a framework:'),
         initial: 0,
-        // @ts-ignore
+        // @ts-expect-error casting
         choices: FRAMEWORKS.map((framework) => {
           const frameworkColor = framework.color
           return {
@@ -118,7 +119,7 @@ async function init() {
         name: 'strategy',
         message: reset('Select a strategy:'),
         initial: 0,
-        // @ts-ignore
+        // @ts-expect-error casting
         choices: STRATEGIES.map((strategy) => {
           const strategyColor = strategy.color
           return {
@@ -132,7 +133,7 @@ async function init() {
         name: 'behavior',
         message: reset('Select a behavior:'),
         initial: 0,
-        // @ts-ignore
+        // @ts-expect-error casting
         choices: BEHAVIORS.map((behavior) => {
           const behaviorColor = behavior.color
           return {
@@ -145,6 +146,14 @@ async function init() {
         type: 'toggle',
         name: 'reloadSW',
         message: reset('Enable periodic SW updates?'),
+        initial: false,
+        active: 'yes',
+        inactive: 'no',
+      },
+      {
+        type: 'toggle',
+        name: 'selfDestroying',
+        message: reset('Unregister SW?'),
         initial: false,
         active: 'yes',
         inactive: 'no',
@@ -172,13 +181,15 @@ async function init() {
     if (reloadSW)
       script += '-reloadsw'
 
+    if (selfDestroying)
+      script += '-destroy'
+
     execSync(`pnpm run start${script}`, {
       stdio: 'inherit',
       cwd: `examples/${framework.dir}`,
     })
   }
-  catch (cancelled) {
-    // @ts-ignore
+  catch (cancelled: any) {
     console.log(cancelled.message)
   }
 }

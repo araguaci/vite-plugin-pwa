@@ -1,12 +1,13 @@
 ---
 title: Apache Http Server 2.4+ | Deployment
+next: Getting Started | Workbox
 ---
 
 # Apache Http Server 2.4+
 
 ## Configure `manifest.webmanifest` mime type
 
-You need to configure the following mime type (see basic configuration bellow):
+You need to configure the following mime type (see basic configuration below):
 
 ```ini
 <IfModule mod_mime.c>
